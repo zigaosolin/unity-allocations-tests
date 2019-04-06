@@ -3,7 +3,7 @@ Simple tests to show how much allocations are done for specific operations in C#
 
 Should work in any version of Unity.
 
-Check Scripts/Editor/AllocationsTests
+Check Scripts/Editor/AllocationsTests.cs to see what the tests actually do. I will be happy if you expand some tests.
 
 To run tests, go to Window -> General -> Test Runner -> Run All
 
