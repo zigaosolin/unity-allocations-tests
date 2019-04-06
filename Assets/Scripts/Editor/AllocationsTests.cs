@@ -7,9 +7,19 @@ using System.Linq;
 using System.Collections;
 using System.Text;
 using UnityEngine;
+using System.IO;
 
 public class AllocationsTest
 {
+    private List<string> results = new List<string>(1000);
+
+
+    [TearDown]
+    public void SaveResults()
+    {
+        File.WriteAllLines("results.txt", results.ToArray());
+    }
+
     public struct MemoryWatch
     {
         const int MaxNoGCMemory = 1024 * 1024 * 10;
@@ -32,18 +42,25 @@ public class AllocationsTest
 
         public long Allocations => endSize - startSize;
 
-        public void AssertNoAlloc(string contextMessage)
+        public string GetAllocationDesc(string contextMessage)
         {
-            if (0 != Allocations)
+            string message = GetMessage(Allocations);
+            Debug.Log(message);
+
+            //Assert.AreEqual(0, Allocations, $"Allocated {Allocations / (1024 * 1024.0):F2} MB: {contextMessage}");
+            return message;
+
+            string GetMessage(long allocations)
             {
-                Debug.Log($"Allocated {Allocations / (1024 * 1024.0):F2} MB: {contextMessage}");
-            } else
-            {
-                Debug.Log($"No allocations: {contextMessage}");
+                if (0 != allocations)
+                {
+                    return $"Allocated {allocations / (1024 * 1024.0):F2} MB: {contextMessage}";
+                }
+                else
+                {
+                    return $"No allocations: {contextMessage}";
+                }
             }
-
-            Assert.AreEqual(0, Allocations, $"Allocated {Allocations / (1024 * 1024.0):F2} MB: {contextMessage}");
-
         }
     }
 
@@ -69,7 +86,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"One Int to string conversion per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"One Int to string conversion per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -108,7 +125,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Closure with single capture creation for at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Closure with single capture creation for at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -135,7 +152,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Closure with single capture creation for at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Lambda creation for at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -174,7 +191,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Foreach lambda allocation for at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Foreach lambda allocation for at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -201,7 +218,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"For each per frame on list at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"For each per frame on list at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -228,7 +245,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"For each per frame on array at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"For each per frame on array at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -252,7 +269,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Each frame select + sum on list of length 100 at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Each frame select + sum on list of length 100 at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -294,7 +311,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Coroutine start per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Coroutine start per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -327,7 +344,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Builder combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Builder combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -360,7 +377,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Builder combining 10 integers with capacity 400 per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Builder combining 10 integers with capacity 400 per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -393,7 +410,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Builder reuse clear combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Builder reuse clear combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -424,7 +441,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"String combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"String combining 10 integers per frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -470,7 +487,7 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Creating a 24 byte controller each frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Creating a 24 byte controller each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
@@ -499,10 +516,75 @@ public class AllocationsTest
         }
 
         watch.Stop();
-        watch.AssertNoAlloc($"Reusing a 24 byte controller each frame at {FramesPerSecond} FPS for {Seconds} s of game");
+        results.Add(watch.GetAllocationDesc($"Reusing a 24 byte controller each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
 
         // Just so we force l to be used
         Assert.Less(0, l);
+    }
+
+
+
+    [Test]
+    public void LocalClosureAllocation()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        watch.Start();
+
+        int l = 0;
+        int ii = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                ii = i;
+                l += LocalClosue();
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Local closure with single capture creation for at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+
+        int LocalClosue()
+        {
+            return randomList[ii % randomList.Count];
+        }
+    }
+
+    [Test]
+    public void LocalFunctionAllocation()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // No context capture!
+                l += LocalFunction(i);
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Local function creation for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+
+        int LocalFunction(int i)
+        {
+            return i;
+        }
     }
 
 
