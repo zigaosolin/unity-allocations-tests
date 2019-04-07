@@ -670,6 +670,107 @@ public class AllocationsTest
         Assert.Less(0, l);
     }
 
+    [Test]
+    public void ListNoAllocTest()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
 
+        var listeners = new ListNoAlloc<IEvent> (10);
+
+        var handler = new HandlerEvent();
+        listeners.Add(handler);
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                listeners.Add(handler);
+                listeners.ForEach(x => x.EventHandler(true));
+                listeners.Remove(handler);
+
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Event add/remove using ListNoAlloc for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
+    [Test]
+    public void LogFormatMessageBeforeCall()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        Log.EnableLogging = false;
+
+        var listeners = new ListNoAlloc<IEvent>(10);
+
+        var handler = new HandlerEvent();
+        listeners.Add(handler);
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // This will not actually be written because EnableLogging = false
+                Log.Info($"Formatted message from integer {i}");
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Log formatted message that is ignored for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
+    [Test]
+    public void LogFormatDeferred()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        Log.EnableLogging = false;
+
+        var listeners = new ListNoAlloc<IEvent>(10);
+
+        var handler = new HandlerEvent();
+        listeners.Add(handler);
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // This will not actually be written because EnableLogging = false
+                // We deferr string construction here
+                Log.Info("Formatted message from integer", i);
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Log message + int (deferred) that is ignored for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
 
 }
