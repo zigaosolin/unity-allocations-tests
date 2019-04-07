@@ -54,11 +54,11 @@ public class AllocationsTest
             {
                 if (0 != allocations)
                 {
-                    return $"Allocated {allocations / (1024 * 1024.0):F2} MB: {contextMessage}";
+                    return $"- Allocated {allocations / (1024 * 1024.0):F2} MB: {contextMessage}\n";
                 }
                 else
                 {
-                    return $"No allocations: {contextMessage}";
+                    return $"- No allocations: {contextMessage}\n";
                 }
             }
         }
@@ -586,6 +586,90 @@ public class AllocationsTest
             return i;
         }
     }
+
+    private event Action<bool> OnEvent;
+
+    private void EventHandler( bool data)
+    {
+    }
+
+    [Test]
+    public void EventsAllocations()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        OnEvent += EventHandler;
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                OnEvent += EventHandler;
+                OnEvent(true);
+                OnEvent -= EventHandler;
+
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Event add/remove for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
+    interface IEvent
+    {
+        void EventHandler(bool data);
+    }
+
+    class HandlerEvent : IEvent
+    {
+        public void EventHandler(bool data)
+        {
+        }
+    }
+
+    [Test]
+    public void InterfaceEventsAllocations()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        List<IEvent> listeners = new List<IEvent>(10);
+
+        var handler = new HandlerEvent();
+        listeners.Add(handler);
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                listeners.Add(handler);
+                listeners.ForEach(x => x.EventHandler(true));
+                listeners.Remove(handler);
+
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Event add/remove for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
 
 
 }
