@@ -20,7 +20,7 @@ public sealed class DictionaryNoAlloc<TKey, TValue>
         private KeyValue[] array;
         private int arrayLength;
 
-        private DictionaryNoAllocIterator(DictionaryNoAlloc<TKey, TValue> dictionary)
+        internal DictionaryNoAllocIterator(DictionaryNoAlloc<TKey, TValue> dictionary)
         {
             array = dictionary.array;
             arrayLength = array.Length;
@@ -146,6 +146,11 @@ public sealed class DictionaryNoAlloc<TKey, TValue>
     }
 
     public int Count => count;
+
+    public DictionaryNoAllocIterator GetIteratorNoAlloc()
+    {
+        return new DictionaryNoAllocIterator(this);
+    }
 
     private int FindIndex(TKey key)
     {

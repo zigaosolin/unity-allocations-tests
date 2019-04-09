@@ -114,4 +114,26 @@ public class DictionaryNoAllocTests
             Assert.AreEqual(i, dictionary[key]);
         }
     }
+
+    [Test]
+    public void Iterate()
+    {
+        var dictionary = new DictionaryNoAlloc<int, string>(100);
+
+        for (int i = 0; i < 50; ++i)
+        {
+            dictionary[i] = i.ToString();
+        }
+
+        int elementsCount = 0;
+
+        var iterator = dictionary.GetIteratorNoAlloc();
+        while(iterator.MoveNext())
+        {
+            ++elementsCount;
+        }
+
+        Assert.AreEqual(50, elementsCount);
+
+    }
 }
