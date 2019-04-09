@@ -773,4 +773,107 @@ public class AllocationsTest
         Assert.Less(0, l);
     }
 
+    [Test]
+    public void LogFormatDeferredTemplate()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var randomList = GetRandomList();
+
+        Log.EnableLogging = false;
+
+        var listeners = new ListNoAlloc<IEvent>(10);
+
+        var handler = new HandlerEvent();
+        listeners.Add(handler);
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // This will not actually be written because EnableLogging = false
+                // We deferr string construction here
+                Log.InfoT("Formatted message from integer", i);
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Log message + template int (deferred) that is ignored for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
+    [Test]
+    public void DictionaryNoAlloc()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var dictionary = new DictionaryNoAlloc<int, string>(1000);
+
+        var handler = new HandlerEvent();
+
+        const string ConstString = "Const string";
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // Add or overwrite
+                for (int ii = 0; ii < 100; ii++)
+                {
+                    dictionary[i*10 + 30 + ii] = ConstString;
+                }
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Dictionary no alloc add/replace 100 elements for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
+    [Test]
+    public void Dictionary()
+    {
+        MemoryWatch watch = new MemoryWatch();
+        var dictionary = new Dictionary<int, string>();
+
+        var handler = new HandlerEvent();
+
+        const string ConstString = "Const string";
+
+        watch.Start();
+
+        int l = 0;
+        for (int j = 0; j < Seconds; ++j)
+        {
+            for (int i = 0; i < FramesPerSecond; ++i)
+            {
+                // Add or overwrite
+                for (int ii = 0; ii < 100; ii++)
+                {
+                    dictionary[i * 10 + 30 + ii] = ConstString;
+                }
+                l += 1;
+            }
+
+        }
+
+        watch.Stop();
+        results.Add(watch.GetAllocationDesc($"Dictionary add/replace 100 elements for each frame at {FramesPerSecond} FPS for {Seconds} s of game"));
+
+        // Just so we force l to be used
+        Assert.Less(0, l);
+    }
+
 }

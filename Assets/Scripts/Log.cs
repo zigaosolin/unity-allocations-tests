@@ -23,4 +23,14 @@ public static class Log
 
         Debug.Log(string.Format(format, argument));
     }
+
+    public static void InfoT<T>(string format, T argument)
+    {
+        if (!EnableLogging)
+        {
+            return;
+        }
+
+        Debug.Log(string.Format(format, argument));
+    }
 }
