@@ -61,6 +61,15 @@ public sealed class ListNoAlloc<T>
     }
 
 
+    public void Clear()
+    {
+        for(int i = 0; i < count; ++i)
+        {
+            array[i] = default;
+        }
+        count = 0;
+    }
+
     void CheckInRange(int index)
     {
         if (index < 0 || index >= count)

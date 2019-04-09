@@ -93,6 +93,22 @@ public class ListNoAllocTests
         Assert.Throws<OverflowException>(() => list.Add(10));
     }
 
+    [Test]
+    public void Clear()
+    {
+        var list = new ListNoAlloc<int>(10);
+
+        for (int i = 0; i < 10; ++i)
+        {
+            list.Add(i * i);
+        }
+
+        list.Clear();
+
+        Assert.AreEqual(0, list.Count);
+        Assert.Throws<ArgumentException>(() => { int x = list[1]; });
+    }
+
 
 
 }
