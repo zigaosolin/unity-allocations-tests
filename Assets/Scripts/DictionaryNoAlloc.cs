@@ -79,11 +79,15 @@ public sealed class DictionaryNoAlloc<TKey, TValue>
 
     public void Add(TKey key, TValue value)
     {
-        Reserve(1);
-
         int index = FindIndex(key);
 
         ref var keyValue = ref array[index];
+        if (keyValue.IsUsed) {
+            throw new ArgumentException($"Key {key} already exists");
+        }
+
+        Reserve(1);
+
         keyValue.IsUsed = true;
         keyValue.Key = key;
         keyValue.Value = value;
@@ -174,15 +178,14 @@ public sealed class DictionaryNoAlloc<TKey, TValue>
         }
     }
 
-    private void RemoveIndex(int index)
-    {
-        int currentIndex = index;
-        ref var current = ref array[index];
-        int currentHash = GetHasInRange(current.Key.GetHashCode());
+    private void RemoveIndex(int index) {
 
         // Move all elements following one to the left
         while (true)
         {
+            ref var current = ref array[index];
+            int currentHash = GetHasInRange(current.Key.GetHashCode());
+
             int nextIndex = (index + 1) % array.Length;
             ref var next = ref array[nextIndex];
 
@@ -200,13 +203,16 @@ public sealed class DictionaryNoAlloc<TKey, TValue>
             current.Key = next.Key;
             current.Value = next.Value;
 
-            current = next;
+            index = nextIndex;
         }
 
         // Remove current
-        current.IsUsed = false;
-        current.Key = default;
-        current.Value = default;
+        {
+            ref var current = ref array[index];
+            current.IsUsed = false;
+            current.Key = default;
+            current.Value = default;
+        }
     }
 
     private int GetHasInRange(int hash)

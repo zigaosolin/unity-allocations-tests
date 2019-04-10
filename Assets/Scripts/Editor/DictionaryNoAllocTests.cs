@@ -32,6 +32,13 @@ public class DictionaryNoAllocTests
     }
 
     [Test]
+    public void AddFailDuplicate() {
+        var dictionary = new DictionaryNoAlloc<string, int>(10);
+        dictionary.Add("MyValue", 10);
+        Assert.Throws<ArgumentException>(() => dictionary.Add("MyValue", 10));
+    }
+
+    [Test]
     public void AddOverRange()
     {
         var dictionary = new DictionaryNoAlloc<string, int>(2);
@@ -77,13 +84,15 @@ public class DictionaryNoAllocTests
         Assert.Throws<KeyNotFoundException>(() => { int x = dictionary[4]; });
     }
 
-    struct HashableKey : IEquatable<HashableKey>
-    {
+    struct HashableKey : IEquatable<HashableKey> {
+
+        private readonly int hash;
         string keyValue;
 
-        public HashableKey(string keyValue)
+        public HashableKey(string keyValue, int hash = 1)
         {
             this.keyValue = keyValue;
+            this.hash = hash;
         }
 
         public bool Equals(HashableKey other)
@@ -94,7 +103,7 @@ public class DictionaryNoAllocTests
         public override int GetHashCode()
         {
             // Worst possible hash, always the same
-            return 1;
+            return hash;
         }
     }
 
@@ -113,6 +122,17 @@ public class DictionaryNoAllocTests
             var key = new HashableKey(i.ToString());
             Assert.AreEqual(i, dictionary[key]);
         }
+    }
+
+    [Test]
+    public void HashClashSevereDuplicated() {
+        var dictionary = new DictionaryNoAlloc<HashableKey, int>(3);
+
+        dictionary.Add(new HashableKey("A", 1), 10);
+        dictionary.Add(new HashableKey("B", 1), 12);
+        dictionary.Remove(new HashableKey("A", 1));
+
+        Assert.AreEqual(12, dictionary[new HashableKey("B", 1)]);
     }
 
     [Test]
